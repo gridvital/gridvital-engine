@@ -24,6 +24,7 @@ const clinicSchema = new mongoose.Schema(
     otp: { type: String, default: null },
     otpExpiresAt: { type: Date, default: null },
     doctorName: { type: String, default: null },
+    rmName: { type: String, default: null },
     specialization: { type: String, default: null },
     clinicName: { type: String, default: null },
     gender: { type: String, enum: ["Male", "Female", "Other"], default: null },
@@ -36,6 +37,8 @@ const clinicSchema = new mongoose.Schema(
     clinicDisplayId: { type: String, unique: true, sparse: true },
     isActive: { type: Boolean, default: true },
     isConsent: { type: Boolean, default: false },
+    isTermsAccepted: { type: Boolean, default: false },
+    consentAcceptedAt: { type: Date, default: null },
     subscriptionType: {
       type: String,
       enum: ["FREE_TRIAL", "PAID_SUBSCRIBED", "EXPIRED"],
