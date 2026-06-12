@@ -44,27 +44,39 @@ const getPastPrescriptions = async (currentToken, clinicId) => {
 };
 
 const registerClinic = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, isTermsAccepted, consentAcceptedAt } = req.body;
 
   if (!email || !password) {
     res.status(400);
     throw new Error("Email and password are required");
   }
 
+  if (isTermsAccepted !== true) {
+    res.status(400);
+    throw new Error("You must accept the terms and conditions to register");
+  }
+
   const existingClinic = await Clinic.findOne({ email });
   if (existingClinic) {
-    res.status(409);
-    throw new Error("A clinic with this email already exists");
+    if (existingClinic.isEmailVerified) {
+      res.status(409);
+      throw new Error("A clinic with this email already exists");
+    }
+    await Clinic.findByIdAndDelete(existingClinic._id);
   }
 
   const otp = crypto.randomInt(100000, 999999).toString();
   const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+   console.log(`[DEV FALLBACK] OTP for ${email}: ${otp}`);
 
   await Clinic.create({
     email,
     password,
     otp,
     otpExpiresAt,
+    isTermsAccepted,
+    consentAcceptedAt: consentAcceptedAt || null,
   });
 
   try {

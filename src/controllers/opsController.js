@@ -30,7 +30,7 @@ const opsLogin = asyncHandler(async (req, res) => {
 
   const token = generateToken(user._id);
 
-  res.json({ success: true, userType: "GRID_OPS", token });
+  res.json({ success: true, userType: user.role, token });
 });
 
 const registerOps = asyncHandler(async (req, res) => {
@@ -94,7 +94,7 @@ const registerRm = asyncHandler(async (req, res) => {
   const rm = await Clinic.create({
     email,
     password,
-    doctorName: name,
+    rmName: name,
     role: "GRID_RM",
     isEmailVerified: true,
   });
@@ -105,7 +105,7 @@ const registerRm = asyncHandler(async (req, res) => {
     data: {
       id: rm._id,
       email: rm.email,
-      name: rm.doctorName,
+      name: rm.rmName,
       role: rm.role,
     },
   });
@@ -242,6 +242,42 @@ const manageSubscription = asyncHandler(async (req, res) => {
   res.json({ success: true, message: "Subscription updated successfully" });
 });
 
+const listRms = asyncHandler(async (req, res) => {
+  const { page = 1, pageSize = 10, searchTerm } = req.body;
+
+  const filter = { role: "GRID_RM" };
+  if (searchTerm && searchTerm.trim()) {
+    const regex = new RegExp(searchTerm.trim(), "i");
+    filter.$or = [
+      { rmName: regex },
+      { email: regex },
+    ];
+  }
+
+  const total = await Clinic.countDocuments(filter);
+  const rms = await Clinic.find(filter)
+    .select("email rmName doctorName isActive createdAt")
+    .sort({ createdAt: -1 })
+    .skip((page - 1) * pageSize)
+    .limit(pageSize)
+    .lean();
+
+  res.json({
+    success: true,
+    data: rms.map((rm) => ({
+      _id: rm._id,
+      email: rm.email,
+      name: rm.rmName || rm.doctorName || null,
+      isActive: rm.isActive,
+      createdAt: rm.createdAt,
+    })),
+    total,
+    page,
+    pageSize,
+    totalPages: Math.ceil(total / pageSize),
+  });
+});
+
 const deleteClinic = asyncHandler(async (req, res) => {
   const { clinicId } = req.body;
 
@@ -263,12 +299,34 @@ const deleteClinic = asyncHandler(async (req, res) => {
   });
 });
 
+const deleteRm = asyncHandler(async (req, res) => {
+  const { rmId } = req.body;
+
+  if (!rmId) {
+    res.status(400);
+    throw new Error("rmId is required");
+  }
+
+  const rm = await Clinic.findOneAndDelete({ _id: rmId, role: "GRID_RM" });
+  if (!rm) {
+    res.status(404);
+    throw new Error("RM not found");
+  }
+
+  res.json({
+    success: true,
+    message: "RM account permanently deleted",
+  });
+});
+
 module.exports = {
   opsLogin,
   registerOps,
   registerRm,
   listClinics,
+  listRms,
   clinicDetails,
   manageSubscription,
   deleteClinic,
+  deleteRm,
 };
