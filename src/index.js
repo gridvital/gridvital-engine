@@ -21,6 +21,10 @@ app.get("/", (req, res) => {
   res.send("GridVital Backend Running");
 });
 
+app.get("/invoke-backend", (req, res) => {
+  res.json({ status: "active", bridge: "GridVital KeepAlive Engine" });
+});
+
 app.use("/api/clinic", clinicRoutes);
 app.use("/api/patient", patientRoutes);
 app.use("/api/ops", opsRoutes);
