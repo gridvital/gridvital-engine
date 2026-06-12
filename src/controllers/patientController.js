@@ -4,7 +4,7 @@ const Clinic = require("../models/Clinic");
 const asyncHandler = require("../utils/asyncHandler");
 
 const qrRegister = asyncHandler(async (req, res) => {
-  const { clinicDisplayId, name, phone, email, gender, age, chiefComplaints, isConsent } =
+  const { clinicDisplayId, name, phone, email, gender, age, chiefComplaints, isConsent, bookedBy } =
     req.body;
 
   if (!isConsent) {
@@ -71,6 +71,7 @@ const qrRegister = asyncHandler(async (req, res) => {
     status: "Waiting",
     consultationFeeCharged: clinic.defaultConsultationFee || 0,
     isConsent,
+    bookedBy: bookedBy || "PATIENT",
   });
 
   res.status(201).json({

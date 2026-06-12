@@ -20,8 +20,10 @@ const {
   callNextPatient,
   getConsultationStatus,
   getSubscriptionStatus,
+  doctorRegisterPatient,
 } = require("../controllers/clinicController");
 const { protectClinic } = require("../middlewares/authMiddleware");
+const { checkSubscriptionStatus } = require("../middlewares/subscriptionMiddleware");
 const {
   otpRegistrationLimiter,
   otpVerificationLimiter,
@@ -47,5 +49,6 @@ router.get("/profile", protectClinic, getClinicProfile);
 router.post("/call-next", protectClinic, callNextPatient);
 router.get("/consultation-status", protectClinic, getConsultationStatus);
 router.get("/subscription", protectClinic, getSubscriptionStatus);
+router.post("/doctor-register-patient", protectClinic, checkSubscriptionStatus, doctorRegisterPatient);
 
 module.exports = router;
